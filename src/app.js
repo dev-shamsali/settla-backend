@@ -11,7 +11,7 @@ import { apiRouter, webhookRouter } from './routes/index.js';
 import { healthCtl } from './controllers/index.js';
 import { openapi } from './docs/openapi.js';
 
-export function createApp({ authLimit = isTest ? 100000 : 10 } = {}) {
+export function createApp({ authLimit = isTest ? 100000 : env.AUTH_RATE_LIMIT } = {}) {
   const app = express();
   app.disable('x-powered-by');
   app.set('trust proxy', 1);

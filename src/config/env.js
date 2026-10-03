@@ -9,6 +9,7 @@ const schema = z.object({
   MONGODB_URI: z.string().min(1),
   MONGODB_DB: z.string().default('settla_dev'),
   REDIS_URL: opt,
+  AUTH_RATE_LIMIT: z.coerce.number().int().min(1).default(10),
   JWT_ACCESS_SECRET: z.string().min(32),
   JWT_REFRESH_SECRET: z.string().min(32),
   ACCESS_TOKEN_TTL: z.string().default('15m'),
