@@ -89,7 +89,8 @@ export async function getCaseDetail(tenantId, caseId) {
     c.paymentId ? repos.payments.findOne(tenantId, { gatewayPaymentId: c.paymentId }) : null,
     c.paymentId ? repos.orders.find(tenantId, { paymentRef: c.paymentId }, { limit: 5 }) : [],
   ]);
-  const cart = c.customerId ? await repos.cartSnapshots.find(tenantId, { customerId: c.customerId }, { limit: 1 }) : [];
+  let cart = await repos.cartSnapshots.find(tenantId, { caseId }, { limit: 1 }); // this case's own cart first
+  if (!cart.length && c.customerId) cart = await repos.cartSnapshots.find(tenantId, { customerId: c.customerId }, { limit: 1 });
   return { case: c, events, transitions, decisions, traces, actions, approvals, escalations, messages, audit: audits, customer, payment, orders, cart: cart[0] ?? null };
 }
 

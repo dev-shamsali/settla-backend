@@ -28,3 +28,19 @@ describe('demo: money debited, no order (UrbanStep / Ananya / pay_Q7xK2)', () =>
     expect(detail.actions.filter((a) => a.state === 'VERIFIED').length).toBeGreaterThanOrEqual(4);
   });
 });
+
+describe('case detail data integrity', () => {
+  beforeAll(startDb);
+  afterAll(stopDb);
+  it('shows the order created for this case and this case\'s own cart (not another case\'s)', async () => {
+    const { tenant: t } = await makeTenant();
+    const ctx = makeCtx({ tenant: t, clock: makeClock({ simulated: true }) });
+    const { case: a } = await runDemoCase(ctx, { scenario: 'high_value' }); // ₹18,750 cart, escalated
+    const { case: b } = await runDemoCase(ctx); // ₹3,499, recovered
+    expect(b.cart.total).toBe(3499);
+    expect(b.orders).toHaveLength(1);
+    expect(b.orders[0]).toMatchObject({ orderNumber: b.case.orderNumber, total: 3499 });
+    expect(a.cart.total).toBe(18750);
+    expect(a.orders).toHaveLength(0);
+  });
+});

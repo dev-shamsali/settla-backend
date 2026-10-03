@@ -72,7 +72,7 @@ async function investigate(ctx, c) {
     const snap = (await repos.cartSnapshots.find(ctx.tenantId, { customerId: localCustomer._id }, { limit: 1 }))[0];
     if (snap) cartSnap = { items: snap.items, total: snap.total, hash: snap.hash };
   } else {
-    await repos.cartSnapshots.upsert(ctx.tenantId, { customerId: localCustomer._id, hash: cartSnap.hash }, { items: cartSnap.items, total: cartSnap.total });
+    await repos.cartSnapshots.upsert(ctx.tenantId, { caseId: c._id, customerId: localCustomer._id, hash: cartSnap.hash }, { items: cartSnap.items, total: cartSnap.total });
   }
   const inventory = cartSnap ? await lookup(ctx, c._id, 'Shopify inventory', () => a.orders.getInventory(cartSnap.items.map((i) => i.sku))) : {};
   const cartMatchesPayment = !!cartSnap && cartSnap.total === payment.amount;
@@ -237,6 +237,10 @@ export async function execute(ctx, c, plan, policy, risk, extra = {}) {
   ctx.clock.advance(STEP_MS.verified);
   await addEvent(ctx, c._id, { type: 'outcome.verified', system: 'rhea', action: refunded ? `Refund ${r.result.refundId} verified` : `Order ${r.result.orderNumber} created and verified`, metadata: { checks: r.verification?.checks } });
   await transition(ctx, c._id, refunded ? 'REFUNDED' : 'RESOLVED', refunded ? 'refund verified' : 'order recovered');
+  if (!refunded && r.result.orderNumber) {
+    // persist the order we just created and verified, so the case page can show it
+    await repos.orders.upsert(ctx.tenantId, { orderNumber: r.result.orderNumber }, { paymentRef: fresh.paymentId, total: r.result.amount, status: 'open', customerId: fresh.customerId, caseId: c._id });
+  }
   await patchCase(ctx, c._id, { autonomous: extra.approved ? false : true, orderNumber: r.result.orderNumber, refundId: r.result.refundId });
   await finalizeTrace(ctx, c._id, { verification: 'PASSED', final: refunded ? 'REFUNDED' : 'RESOLVED', execution: plan.tool });
 
