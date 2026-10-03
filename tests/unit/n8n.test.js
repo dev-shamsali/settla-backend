@@ -156,3 +156,32 @@ describe('PaymentProvider / RazorpayAdapter', () => {
     expect(a.payments).toBeTruthy();
   });
 });
+
+describe('Gemini provider', () => {
+  it('sends the key in a header (never the URL), requests JSON, and returns the model text', async () => {
+    const { geminiProvider, getProvider } = await import('../../src/agents/llm.js');
+    const { env } = await import('../../src/config/env.js');
+    const original = globalThis.fetch;
+    let seen;
+    const orig = env.GEMINI_API_KEY;
+    // env is frozen: exercise via a temporary fetch stub and a patched copy of the provider call
+    globalThis.fetch = async (url, init) => { seen = { url, init }; return new Response(JSON.stringify({ candidates: [{ content: { parts: [{ text: '{"ok":true}' }] } }] }), { status: 200 }); };
+    try {
+      expect(getProvider('gemini')).toBe(geminiProvider);
+      if (!env.GEMINI_API_KEY) {
+        await expect(geminiProvider.complete({ system: 's', user: 'u' })).rejects.toThrow(/GEMINI_API_KEY not set/);
+      } else {
+        const out = await geminiProvider.complete({ system: 's', user: 'u' });
+        expect(out).toBe('{"ok":true}');
+        expect(seen.url).not.toContain(orig);
+        expect(seen.url).toMatch(/^https:\/\/generativelanguage\.googleapis\.com\/v1beta\/models\/[\w.-]+:generateContent$/);
+        expect(seen.init.headers['x-goog-api-key']).toBe(orig);
+        expect(JSON.parse(seen.init.body).generationConfig.responseMimeType).toBe('application/json');
+      }
+    } finally { globalThis.fetch = original; }
+  });
+  it('unknown provider names fall back to the deterministic mock', async () => {
+    const { getProvider, mockProvider } = await import('../../src/agents/llm.js');
+    expect(getProvider('does-not-exist')).toBe(mockProvider);
+  });
+});

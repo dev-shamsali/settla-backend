@@ -1,5 +1,5 @@
 import { getProvider } from './llm.js';
-import { parsePlanText, validatePlan, TOOLS } from './planSchema.js';
+import { parsePlanText, validatePlan, TOOLS, planJsonSchema, DECISIONS } from './planSchema.js';
 import { wrapUntrusted } from '../security/untrusted.js';
 import { logger } from '../lib/logger.js';
 
@@ -16,7 +16,10 @@ Rules:
 /** Evidence handed to the model: structured facts + clearly fenced untrusted text. */
 export function buildUserPrompt(evidence, customerText) {
   const { __simulate, ...facts } = evidence;
-  return `EVIDENCE (trusted, system-of-record facts):\n${JSON.stringify(facts)}\n\n${wrapUntrusted('customer_message', customerText)}`;
+  return `OUTPUT JSON SCHEMA (return exactly one object, every required field, no extra fields; decision in [${DECISIONS.join(", ")}]; use policy "recover-order-v2" for RECOVER_ORDER, "refund-v1" for REFUND, else "none"; confidence is a number 0-1):
+${JSON.stringify(planJsonSchema)}
+
+EVIDENCE (trusted, system-of-record facts):\n${JSON.stringify(facts)}\n\n${wrapUntrusted('customer_message', customerText)}`;
 }
 
 /**

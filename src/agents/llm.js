@@ -91,4 +91,33 @@ export const anthropicProvider = {
   },
 };
 
-export const getProvider = (name = env.LLM_PROVIDER) => (name === 'anthropic' ? anthropicProvider : mockProvider);
+/** Google Gemini via REST. Key travels in a header (never the URL) so it cannot leak into URL logs. */
+export const geminiProvider = {
+  name: 'gemini',
+  async complete({ system, user }) {
+    if (!env.GEMINI_API_KEY) throw new Error('GEMINI_API_KEY not set');
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), 30000);
+    try {
+      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(env.GEMINI_MODEL)}:generateContent`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', 'x-goog-api-key': env.GEMINI_API_KEY },
+        body: JSON.stringify({
+          systemInstruction: { parts: [{ text: system }] },
+          contents: [{ role: 'user', parts: [{ text: user }] }],
+          generationConfig: { temperature: 0, responseMimeType: 'application/json', maxOutputTokens: 4096 },
+        }),
+        signal: ctrl.signal,
+        redirect: 'error',
+      });
+      if (!res.ok) throw new Error(`gemini ${res.status}`);
+      const j = await res.json();
+      return j.candidates?.[0]?.content?.parts?.map((p) => p.text ?? '').join('') ?? '';
+    } finally {
+      clearTimeout(t);
+    }
+  },
+};
+
+const PROVIDERS = { mock: mockProvider, anthropic: anthropicProvider, gemini: geminiProvider };
+export const getProvider = (name = env.LLM_PROVIDER) => PROVIDERS[name] ?? mockProvider;
