@@ -36,3 +36,10 @@ Approver without refund permission consumed the approval and caused a 500 (now 4
 - Live vendor adapters (Razorpay/Shopify/Freshdesk/HubSpot/WhatsApp/Slack) and the Anthropic provider (no credentials).
 - Cross-browser (only Chromium), screen-reader testing, load/performance testing.
 - Coverage is below 85 % for branches; live adapters and workers are largely uncovered.
+
+## Update: n8n integration layer (2026-10-03)
+- Backend: **189 / 189** pass (7 files). New:  (contract simulator: valid, bad/tampered signature, wrong auth token, stale/future timestamp, replay, 6 invalid-payload cases, 5 financial actions, expired authorisation; backend decision layer; PaymentProvider/RazorpayAdapter) and  (propose, dispatch + full audit trail, duplicate key replay, key reuse 422, missing key, invalid proposals never reach n8n, financial actions blocked + audited, RBAC, per-action permission, >₹5,000 approval rule overriding Rhea, kill switch, tenant isolation, n8n failure modes, retry-after-failure).
+- Coverage: statements 76.55 %, branches 66.66 %, functions 71.56 %, lines 81.87 %.
+- Frontend: tsc/eslint clean, 9 / 9 unit; Playwright E2E 15 / 15 (adds automation panel flow and presentation page).
+- n8n (workflow , inactive) tested through the n8n MCP  with pinned, backend-signed requests: valid ⇒ 200 success (exec 4); stale timestamp ⇒ TIMESTAMP_INVALID 401 (exec 5); missing authorization ⇒ INVALID_PAYLOAD 422 (exec 6); refund action ⇒ ACTION_NOT_ALLOWED 422 (exec 7).
+- **Not verified:** HMAC verification inside n8n (secret not available there ⇒ ; strict signature checks are tested in the backend simulator); n8n-side replay (workflow static data does not persist across manual test runs); a real HTTP call to the activated webhook.

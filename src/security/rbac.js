@@ -13,6 +13,7 @@ export const ALL_PERMISSIONS = [
   'analytics:read', 'audit:read',
   'users:read', 'users:write', 'tenant:read', 'tenant:write',
   'knowledge:read', 'knowledge:write',
+  'automation:read', 'automation:dispatch',
   'admin:tenants', 'admin:system',
 ];
 
@@ -25,10 +26,12 @@ export const ROLE_PERMISSIONS = Object.freeze({
     'cases:read', 'cases:update', 'cases:create', 'payments:read', 'orders:read', 'orders:create', 'customers:read',
     'crm:write', 'tickets:write', 'messages:send', 'approvals:read', 'approvals:approve', 'escalations:read',
     'escalations:update', 'policies:read', 'integrations:read', 'analytics:read', 'knowledge:read',
+    'automation:read', 'automation:dispatch',
   ],
   CX_AGENT: [
     'cases:read', 'cases:update', 'payments:read', 'orders:read', 'customers:read', 'tickets:write',
     'messages:send', 'approvals:read', 'escalations:read', 'escalations:update', 'knowledge:read',
+    'automation:read', 'automation:dispatch',
   ],
   FINANCE: [
     'cases:read', 'payments:read', 'payments:refund', 'orders:read', 'customers:read', 'approvals:read',

@@ -28,6 +28,8 @@ export const openapi = {
     '/api/v1/audit': { get: op('Append-only audit log', 'audit:read') },
     '/api/v1/tenant/execution-mode': { patch: op('Kill switch: AUTONOMOUS | RECOMMEND_ONLY | DISABLED', 'tenant:write') },
     '/api/v1/stream': { get: op('Server-sent events: case.event, case.transition, action.state, notification', 'authenticated') },
+    '/api/v1/cases/{id}/automation': { get: op('n8n automation runs for a case (audit view)', 'automation:read'), post: op('Dispatch a backend-validated Rhea proposal to n8n. Idempotency-Key required. Financial actions are never allowed; >₹5,000 side-effect actions need an approved human approval', 'automation:dispatch', idem) },
+    '/api/v1/cases/{id}/automation/proposal': { get: op('Rhea proposal plus the backend decision preview', 'automation:read') },
     '/api/v1/demo/run': { post: op('Run deterministic UrbanStep demo (mock integrations)', 'cases:create') },
     '/webhooks/{source}': { post: { summary: 'razorpay|shopify|freshdesk|whatsapp. Headers: x-settla-key-id, x-settla-timestamp, x-settla-signature (HMAC-SHA256 of "{ts}.{rawBody}"), x-event-id. 300s tolerance, replay-protected.', responses: { 202: { description: 'accepted' }, 401: { description: 'bad signature/timestamp' } } } },
   },

@@ -21,6 +21,7 @@ import { audit } from '../services/auditService.js';
 import { makeCtx, makeClock } from '../lib/context.js';
 import { env, isProd } from '../config/env.js';
 import { effectivePermissions } from '../security/rbac.js';
+import * as automation from '../services/automationService.js';
 
 const ok = (res, data, status = 200) => res.status(status).json({ success: true, data });
 const REFRESH_COOKIE = 'settla_rt';
@@ -228,4 +229,14 @@ export const healthCtl = async (req, res) => {
   let dbOk = false;
   try { await col(C.tenants).findOne({}, { projection: { _id: 1 } }); dbOk = true; } catch { /* reported below */ }
   res.status(dbOk ? 200 : 503).json({ status: dbOk ? 'ok' : 'degraded', db: dbOk, uptime: Math.round(process.uptime()) });
+};
+
+export const automationCtl = {
+  list: async (req, res) => ok(res, await automation.listRuns(req.ctx.tenantId, req.params.id)),
+  proposal: async (req, res) => ok(res, await automation.getProposal(req.ctx, req.params.id)),
+  async dispatch(req, res) {
+    const key = req.headers['idempotency-key'];
+    if (!key || String(key).length < 8) throw badRequest('Idempotency-Key header required (8-128 chars)', 'IDEMPOTENCY_KEY_REQUIRED');
+    ok(res, await automation.dispatchAutomation(req.ctx, req.params.id, req.body.proposal, String(key)), 200);
+  },
 };

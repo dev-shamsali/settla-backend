@@ -33,6 +33,7 @@ export const C = Object.freeze({
   notifications: 'notifications',
   idempotency: 'idempotency_keys',
   webhookEvents: 'webhook_events',
+  automationRuns: 'automation_runs',
 });
 
 let client;
@@ -102,6 +103,11 @@ export async function ensureIndexes() {
   await t(C.idempotency, [
     [{ tenantId: 1, actionType: 1, key: 1 }, { unique: true }],
     [{ createdAt: 1 }, { expireAfterSeconds: 60 * 60 * 24 * 7 }],
+  ]);
+  await t(C.automationRuns, [
+    [{ tenantId: 1, caseId: 1, createdAt: -1 }, {}],
+    [{ tenantId: 1, idempotencyKey: 1 }, {}],
+    [{ correlationId: 1 }, { unique: true }],
   ]);
   await t(C.webhookEvents, [
     [{ source: 1, eventId: 1 }, { unique: true }],

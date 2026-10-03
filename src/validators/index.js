@@ -25,6 +25,7 @@ export const v = {
   patchUser: strict({ role: z.enum(ROLES).refine((r) => r !== 'SUPER_ADMIN').optional(), status: z.enum(['active', 'disabled']).optional(), grantedPermissions: z.array(z.string().max(40)).max(50).optional(), revokedPermissions: z.array(z.string().max(40)).max(50).optional() }),
   integrationParam: strict({ type: z.enum(['razorpay', 'shopify', 'freshdesk', 'hubspot', 'whatsapp', 'slack', 'email']) }),
   integrationPut: strict({ credentials: z.record(z.string().max(60), z.string().max(500)).optional(), mode: z.enum(['mock', 'live']).optional(), enabled: z.boolean().optional() }),
+  automationDispatch: strict({ proposal: z.record(z.string(), z.unknown()) }),
   analytics: z.object({ days: z.coerce.number().int().min(1).max(365).optional() }).strict(),
   auditQ: z.object({ ...pageQ, resourceType: z.string().max(40).optional(), resourceId: z.string().max(64).optional(), action: z.string().max(60).optional() }).strict(),
   knowledge: strict({ title: z.string().min(1).max(200), kind: z.enum(['policy', 'product', 'procedure', 'resolution_rule']), body: z.string().min(1).max(20000) }),

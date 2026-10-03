@@ -24,6 +24,10 @@ export function apiRouter({ authLimit = 10 } = {}) {
   r.get('/cases/:id/timeline', P('cases:read'), validate({ params: v.idParam }), h(K.caseCtl.timeline));
   r.post('/cases/:id/process', P('cases:update'), validate({ params: v.idParam }), h(K.caseCtl.process));
 
+  r.get('/cases/:id/automation', P('automation:read'), validate({ params: v.idParam }), h(K.automationCtl.list));
+  r.get('/cases/:id/automation/proposal', P('automation:read'), validate({ params: v.idParam }), h(K.automationCtl.proposal));
+  r.post('/cases/:id/automation', P('automation:dispatch'), validate({ params: v.idParam, body: v.automationDispatch }), h(K.automationCtl.dispatch));
+
   r.get('/payments', P('payments:read'), validate({ query: v.listGeneric }), h(K.paymentCtl.list));
   r.get('/payments/:id', P('payments:read'), validate({ params: z.object({ id: z.string().regex(/^[\w-]{3,64}$/) }) }), h(K.paymentCtl.get));
   r.post('/payments/:id/refund', P('payments:refund'), validate({ params: z.object({ id: z.string().regex(/^[\w-]{3,64}$/) }), body: v.refund }), h(K.paymentCtl.refund));
